@@ -11,6 +11,11 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Ensures all commits and files are fetched
+
+      - name: Debug Directory
+        run: ls -la  # Check if package.json is present
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -29,15 +34,19 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      - name: Deploy via SSH (Password-based)
+      - name: Debug Deployment
+        run: ls -la  # Verify files
+
+      - name: Deploy via SSH (Using Password - Not Recommended)
         run: |
           sudo apt-get install -y sshpass
-          sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh -o StrictHostKeyChecking=no aidev@10.10.9.215 << 'EOF'
-          cd ~/New_bot
-          git pull origin main
-          npm install
-          pm2 stop proxy || true
-          pm2 start proxy.js --name proxy --watch --port 3002
-          EOF
-
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh -o StrictHostKeyChecking=no aidev@10.10.9.215 'bash -c "
+            cd ~/New_bot
+            git pull origin main
+            npm install
+            pm2 stop proxy || true
+            pm2 start proxy.js --name proxy --watch --port 3002
+          "'
