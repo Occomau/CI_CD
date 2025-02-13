@@ -37,13 +37,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Debug Deployment
-        run: ls -la  # Verify files
-
       - name: Install sshpass
         run: sudo apt-get install -y sshpass
 
-      - name: Deploy via SSH using Password
+      - name: Debug SSH Connection
+        run: |
+          echo "Testing SSH connection..."
+          sshpass -p "OccomAiDev_1" ssh -o StrictHostKeyChecking=no aidev@10.10.9.215 "echo 'SSH connection successful'"
+
+      - name: Deploy via SSH
         run: |
           sshpass -p "OccomAiDev_1" ssh -o StrictHostKeyChecking=no aidev@10.10.9.215 << 'EOF'
           cd ~/New_bot
