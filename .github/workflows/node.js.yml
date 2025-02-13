@@ -40,16 +40,12 @@ jobs:
       - name: Debug Deployment
         run: ls -la  # Verify files
 
-      - name: Setup SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 10.10.9.215 >> ~/.ssh/known_hosts
+      - name: Install sshpass
+        run: sudo apt-get install -y sshpass
 
-      - name: Deploy via SSH
+      - name: Deploy via SSH using Password
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no aidev@10.10.9.215 << 'EOF'
+          sshpass -p "OccomAiDev_1" ssh -o StrictHostKeyChecking=no aidev@10.10.9.215 << 'EOF'
           cd ~/New_bot
           git pull origin main
           npm install
