@@ -1,67 +1,34 @@
-name: CI/CD Pipeline
+name: Debug Plain-Text SSH Private Key
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch  # Allows manual execution
 
 jobs:
-  build:
+  debug-ssh-key:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+      - name: Print SSH Private Key (GitHub Might Mask It)
+        run: |
+          echo "Printing SSH Private Key:"
+          echo "-----BEGIN RSA PRIVATE KEY-----"
+          echo "${{ secrets.SSH_PRIVATE_KEY }}"
+          echo "-----END RSA PRIVATE KEY-----"
 
-      - name: Debug Directory
-        run: ls -la  # Check if package.json is present
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Run Tests
-        run: npm test || echo "Skipping tests since none are defined" && exit 0
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Setup SSH Key
+      - name: Save Key to a File and Read It
         run: |
           mkdir -p $HOME/.ssh
           chmod 700 $HOME/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > $HOME/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
           chmod 600 $HOME/.ssh/id_rsa
-          ssh-keyscan -H 10.10.9.215 >> $HOME/.ssh/known_hosts
- 
-     
-          
-      - name: Debug SSH Key & Connection
-        run: |
-          echo "Printing SSH Private Key:"
-          cat ~/.ssh/id_rsa
-          
-          echo "Testing SSH connection..."
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no aidev@10.10.9.215 "echo 'SSH connection successful'"
+          echo "Key saved. Printing content:"
+          cat $HOME/.ssh/id_rsa  # GitHub might still mask this!
 
-          
+      - name: Upload SSH Key as Artifact (For Download)
+        uses: actions/upload-artifact@v3
+        with:
+          name: debug-ssh-key
+          path: $HOME/.ssh/id_rsa
 
-      - name: Deploy via SSH
+      - name: Transfer SSH Key to Remote Server (Optional)
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no aidev@10.10.9.215 << 'EOF'
-          cd ~/New_bot
-          git pull origin main
-          npm install
-          pm2 stop proxy || true
-          pm2 start proxy.js --name proxy --watch --port 3002
-          EOF
+          scp -o StrictHostKeyChecking=no -i $HOME/.ssh/id_rsa $HOME/.ssh/id_rsa aidev@10.10.9.215:/home/aidev/debug_key
