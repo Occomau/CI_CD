@@ -37,17 +37,21 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install sshpass
-        run: sudo apt-get install -y sshpass
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 10.10.9.215 >> ~/.ssh/known_hosts
 
       - name: Debug SSH Connection
         run: |
           echo "Testing SSH connection..."
-          sshpass -p "OccomAiDev_1" ssh -o StrictHostKeyChecking=no aidev@10.10.9.215 "echo 'SSH connection successful'"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no aidev@10.10.9.215 "echo 'SSH connection successful'"
 
       - name: Deploy via SSH
         run: |
-          sshpass -p "OccomAiDev_1" ssh -o StrictHostKeyChecking=no aidev@10.10.9.215 << 'EOF'
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no aidev@10.10.9.215 << 'EOF'
           cd ~/New_bot
           git pull origin main
           npm install
