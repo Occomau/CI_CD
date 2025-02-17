@@ -6,38 +6,34 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
+    env:
+      HOST: ${{ vars.HOST }}        # Defined in repository settings
+      USER: ${{ vars.USER }}        # Defined in repository settings
+      SSH_PRIVATE_KEY: ${{ vars.SSH_PRIVATE_KEY }}  # Defined in repository settings (if not sensitive)
     steps:
-      # 1) Check out the repository
       - name: Check out code
         uses: actions/checkout@v2
         with:
-          # Some users set fetch-depth to 0 for full history if needed
           fetch-depth: 0
 
-      # 2) Set up Node.js
-      - name: Use Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
           node-version: 16
 
-      # 3) Install dependencies
       - name: Install dependencies
-        run: npm install dotenv
+        run: npm install
 
-
-
-      # 5) Set up SSH keys (if you need to deploy over SSH)
-      - name: Set up SSH keys
+      - name: Setup SSH keys
         run: |
           mkdir -p ~/.ssh
-          echo "${{ vars.SSHKEY }}" > ~/.ssh/id_rsa
+          echo "$SSHKEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ vars.HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
 
-      # 6) Deploy the build output to your server
-      - name: Deploy
+      - name: Deploy to VPS
         run: |
-          # Replace 'build' with your actual output folder if different
-          scp -o StrictHostKeyChecking=no -r build/* ${{ vars.USER }}@${{ vars.HOST }}:/var/www/html
+          scp -o StrictHostKeyChecking=no -r * "$USER"@"$HOST":/path/to/your/app
+          ssh "$USER"@"$HOST" 'pm2 restart all || echo "PM2 not configured"'
