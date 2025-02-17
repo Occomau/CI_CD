@@ -1,12 +1,31 @@
-name: Debug Plain-Text SSH Private Key
+name: ci
 
 on:
-  workflow_dispatch  # Allows manual execution
+  push:
+    branches:
+      - main
 
 jobs:
-  debug-ssh-key:
+  pull:
     runs-on: ubuntu-latest
     steps:
-      - name: SSH Login Using Inline Private Key
+      - uses: actions/checkout@v2
+
+      - name: set up ssh keys
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | ssh -i /dev/stdin -o StrictHostKeyChecking=no aidev@10.10.9.215 "echo 'SSH connection successful'"
+          # Create .ssh directory
+          mkdir -p ~/.ssh
+
+          # Save SSH_PRIVATE_KEY to an id_rsa file (remove any Windows-style \r)
+          echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+
+          # Restrict file permissions
+          chmod 600 ~/.ssh/id_rsa
+
+          # Append known hosts
+          echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+
+      - name: pull code
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no aidev@10.10.9.215 \
+            'cd /var/www/html && git pull'
