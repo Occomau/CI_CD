@@ -32,12 +32,12 @@ jobs:
       - name: Set up SSH keys
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ vars.SSHKEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ vars.HOST }} >> ~/.ssh/known_hosts
 
       # 6) Deploy the build output to your server
       - name: Deploy
         run: |
           # Replace 'build' with your actual output folder if different
-          scp -o StrictHostKeyChecking=no -r build/* ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html
+          scp -o StrictHostKeyChecking=no -r build/* ${{ vars.USER }}@${{ vars.HOST }}:/var/www/html
