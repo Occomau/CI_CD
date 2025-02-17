@@ -9,37 +9,37 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1) Check out the repo
-      - uses: actions/checkout@v2
+      # 1) Check out the repository
+      - name: Check out code
+        uses: actions/checkout@v2
         with:
-          # Some users set fetch-depth to 0 to ensure full history if needed
+          # Some users set fetch-depth to 0 for full history if needed
           fetch-depth: 0
 
-      # 2) Use (or set up) Node.js
+      # 2) Set up Node.js
       - name: Use Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 14
+          node-version: 16
 
       # 3) Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # 4) Build the project (e.g., Svelte)
+      # 4) Build the project (matches your package.json "build" script)
       - name: Build
         run: npm run build
 
-      # 5) Set up SSH keys for deployment
+      # 5) Set up SSH keys (if you need to deploy over SSH)
       - name: Set up SSH keys
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          # Add the host to known_hosts to avoid manual confirmation
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
       # 6) Deploy the build output to your server
       - name: Deploy
         run: |
-          # Example uses scp to copy the "build" folder contents
+          # Replace 'build' with your actual output folder if different
           scp -o StrictHostKeyChecking=no -r build/* ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html
