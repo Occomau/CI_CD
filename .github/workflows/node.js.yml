@@ -9,7 +9,7 @@ jobs:
   test-connection:
     runs-on: ubuntu-latest
     env:
-      HOST: ${{ vars.HOST }}         # Ensure this is publicly accessible or use a self-hosted runner
+      HOST: ${{ vars.HOST }}         # Should be publicly accessible or use a self-hosted runner
       USER: ${{ vars.USER }}
       SSH_PRIVATE_KEY: ${{ vars.SSHKEY }}
     steps:
@@ -19,10 +19,13 @@ jobs:
       - name: Setup SSH keys
         run: |
           mkdir -p ~/.ssh
-          # Use printf to preserve the key format
           printf "%s" "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+
+      - name: Check if port 22 is open
+        run: |
+          nc -zv "$HOST" 22
 
       - name: Test SSH connection with verbose logging
         run: ssh -v "$USER"@"$HOST" 'echo "Connection Successful"'
