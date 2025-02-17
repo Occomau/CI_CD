@@ -11,7 +11,7 @@ jobs:
     env:
       HOST: ${{ vars.HOST }}        # Defined in repository settings
       USER: ${{ vars.USER }}        # Defined in repository settings
-      SSH_PRIVATE_KEY: ${{ vars.SSH_PRIVATE_KEY }}  # Defined in repository settings (if not sensitive)
+      SSH_PRIVATE_KEY: ${{ vars.SSHKEY }}  # Defined in repository settings (if not sensitive)
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -29,7 +29,7 @@ jobs:
       - name: Setup SSH keys
         run: |
           mkdir -p ~/.ssh
-          echo "$SSHKEY" > ~/.ssh/id_rsa
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
 
