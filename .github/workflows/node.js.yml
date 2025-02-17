@@ -17,7 +17,7 @@ jobs:
           mkdir -p ~/.ssh
 
           # Save SSH_PRIVATE_KEY to an id_rsa file (remove any Windows-style \r)
-          echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
 
           # Restrict file permissions
           chmod 600 ~/.ssh/id_rsa
